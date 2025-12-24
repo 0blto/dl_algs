@@ -5,6 +5,7 @@ from ..layers import Layer
 from ..optimizers import Optimizer, SGD
 from ..trainers import Trainer
 from ..utils import device, TrainingModeMixin
+from ..utils.decorators import around, before
 
 
 class NeuralNetwork:
@@ -32,17 +33,25 @@ class NeuralNetwork:
             [g for layer in self.layers for g in layer.gradients()]
         )
 
-    def predict(self, x):
-        xp = device.xp
-        _training = False
-        return xp.argmax(self.forward(x), axis=1)
-
+    @around(
+        before_fn=lambda self: setattr(self, "training", True),
+        after_fn=lambda self: setattr(self, "training", False),
+    )
     def train(self, *args, **kwargs):
         if self.trainer is None: raise ValueError("Trainer не передан в модель")
-        self.training = True
-        history = self.trainer.train(self, *args, **kwargs)
-        self.training = False
+        history = self.trainer.train(*args, **kwargs)
         return history
+
+    @around(
+        before_fn=lambda self: setattr(self, "_prev_training", self.training) or setattr(self, "training", False),
+        after_fn=lambda self: setattr(self, "training", getattr(self, "_prev_training"))
+    )
+    def predict_proba(self, x):
+        return self.forward(x)
+
+    def predict(self, x):
+        xp = device.xp
+        return xp.argmax(self.predict_proba(x), axis=1)
 
 
 __all__ = ["NeuralNetwork"]

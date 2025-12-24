@@ -5,10 +5,11 @@ from ..utils.training import TrainableModel
 
 
 class SimpleTrainer(Trainer):
-    def __init__(self, loss: Loss):
+    def __init__(self, model: TrainableModel, loss: Loss):
+        self.model = model
         self.loss = loss
 
-    def train(self, model: TrainableModel, x_train, y_train,
+    def train(self, x_train, y_train,
               x_test=None, y_test=None, batch_size=32, epochs=10, verbose=True):
 
         xp = device.xp
@@ -29,13 +30,14 @@ class SimpleTrainer(Trainer):
                 x_batch = x_train_shuffled[start:start + batch_size]
                 y_batch = y_train_shuffled[start:start + batch_size]
 
-                logits = model.forward(x_batch)
+                logits = self.model.forward(x_batch)
 
-                self.loss.forward(logits, y_batch)
-                grad = self.loss.backward()
-                model.backward(grad)
-                model.update_weights()
+                loss_value = self.loss.forward(logits, y_batch)
+                grad = self.loss.backward(logits, y_batch)
+                self.model.backward(grad)
+                self.model.update_weights()
 
+                # Метрики
                 metrics = self.loss.compute_metrics(logits, y_batch)
                 train_loss_sum += metrics["loss"] * x_batch.shape[0]
 
@@ -50,7 +52,8 @@ class SimpleTrainer(Trainer):
             history["train_acc"].append(avg_train_acc)
 
             if x_test is not None and y_test is not None:
-                test_metrics = self.loss.compute_metrics(model.forward(x_test), y_test)
+                y_pred = self.model.predict_proba(x_test)
+                test_metrics = self.loss.compute_metrics(y_pred, y_test)
                 history["test_loss"].append(test_metrics["loss"])
                 history["test_acc"].append(test_metrics["accuracy"])
             else:
@@ -60,10 +63,13 @@ class SimpleTrainer(Trainer):
             if verbose:
                 msg = f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.5f}"
                 if avg_train_acc is not None: msg += f", Train Acc: {avg_train_acc:.5f}"
-                msg += f" | Test Loss: {history['test_loss'][-1]:.5f}"
-                if history['test_acc'][-1] is not None: msg += f", Test Acc: {history['test_acc'][-1]:.5f}"
+                test_loss_val = history['test_loss'][-1] or 0.0
+                msg += f" | Test Loss: {test_loss_val:.5f}"
+                test_acc_val = history['test_acc'][-1]
+                if test_acc_val is not None: msg += f", Test Acc: {test_acc_val:.5f}"
                 print(msg)
 
         return history
+
 
 __all__ = ["SimpleTrainer"]

@@ -1,16 +1,14 @@
 from .base import Layer
-from ..activations import Activation, Identity
 from ..utils import device
 
 
 class DenseLayer(Layer):
-    def __init__(self, input_size, output_size, activation: Activation = None, dtype=None):
+    def __init__(self, input_size, output_size, dtype=None):
         xp = device.xp
         limit = (6.0 / (input_size + output_size)) ** 0.5
         dtype = dtype or xp.float32
         self.weights = xp.random.uniform(-limit, limit, (input_size, output_size)).astype(dtype)
         self.biases = xp.zeros(output_size, dtype=dtype)
-        self.activation = activation if activation else Identity()
         self.last_input = None
         self.last_z = None
         self.d_weights = None
@@ -20,12 +18,11 @@ class DenseLayer(Layer):
         input_data = device.ensure_tensor(input_data)
         self.last_input = input_data
         self.last_z = input_data @ self.weights + self.biases
-        return self.activation.forward(self.last_z)
+        return self.last_z  # возвращаем чистую линейную комбинацию
 
     def backward(self, dout):
         xp = device.xp
         dout = device.ensure_tensor(dout)
-        dout = dout * self.activation.backward(self.last_z)
         self.d_weights = self.last_input.T @ dout
         self.d_biases = xp.sum(dout, axis=0)
         return dout @ self.weights.T
@@ -38,4 +35,3 @@ class DenseLayer(Layer):
 
 
 __all__ = ["DenseLayer"]
-

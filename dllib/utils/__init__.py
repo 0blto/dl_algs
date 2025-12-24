@@ -10,6 +10,7 @@ from .metrics import mse, r2_score, rmse
 from .time_series import create_sequences
 from .training import TrainingModeMixin, TrainableModel
 from .ops import softmax, one_hot_encode
+from .norm import standard_normalization
 
 __all__ = [
     "configure_backend",
@@ -25,6 +26,7 @@ __all__ = [
     "TrainingModeMixin",
     "TrainableModel",
     "softmax",
-    "one_hot_encode"
+    "one_hot_encode",
+    "standard_normalization"
 ]
 

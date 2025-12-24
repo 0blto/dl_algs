@@ -10,6 +10,7 @@ __pycache__/
 *.so
 **/mnist.npz
 **/Mushroom_dataset
+**/toxic_comments.csv
 *.log
 *.tmp
 *.bak
@@ -19,3 +20,4 @@ tsne.html
 .DS_Store
 Thumbs.db
 test.py
+test/**

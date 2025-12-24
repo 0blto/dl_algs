@@ -7,7 +7,7 @@ class Loss(ABC):
         pass
 
     @abstractmethod
-    def backward(self):
+    def backward(self, y_pred, y_true):
         pass
 
     @abstractmethod

@@ -17,7 +17,7 @@ class LSTM(NeuralNetwork):
         super().__init__(
             architecture,
             Adam(0.00001),
-            SimpleTrainer(MSELoss())
+            SimpleTrainer(self, MSELoss())
         )
 
 

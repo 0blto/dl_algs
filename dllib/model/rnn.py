@@ -17,7 +17,7 @@ class RNN(NeuralNetwork):
         super().__init__(
             architecture,
             Adam(0.0001),
-            SimpleTrainer(MSELoss())
+            SimpleTrainer(self, MSELoss())
         )
 
 
